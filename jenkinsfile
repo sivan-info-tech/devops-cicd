@@ -1,0 +1,51 @@
+pipeline {
+    agent none
+
+    tools {
+        // Install the Maven version configured as "M3" and add it to the path.
+        jdk "java"
+        maven "my_mavne"
+    }
+
+    stages {
+        stage('Compile') {
+            agent any
+            steps {
+                // Get some code from a GitHub repository
+                git 'https://github.com/sivan-info-tech/devops-cicd.git'
+
+                // Run Maven on a Unix agent.
+                sh "mvn compile"
+            }
+        }
+
+        stage('Code Review') {
+            agent any
+            steps {
+                // Run Maven on a Unix agent.
+                sh "mvn pmd:pmd"
+            }
+        }
+
+        stage('Unit Test') {
+            agent any
+            steps {
+                // Run Maven on a Unix agent.
+                sh "mvn test"
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Package') {
+            agent {label 'linux_slave'}
+            steps {
+                git 'https://github.com/sivan-info-tech/devops-cicd.git'
+                // Run Maven on a Unix agent.
+                sh "mvn package"
+            }
+        }
+    }
+}
